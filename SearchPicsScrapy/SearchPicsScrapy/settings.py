@@ -58,6 +58,7 @@ DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
 #    'SearchPicsScrapy.middlewares.MyCustomDownloaderMiddleware': 543,
 #}
 
+
 # Enable or disable extensions
 # See http://scrapy.readthedocs.org/en/latest/topics/extensions.html
 #EXTENSIONS = {

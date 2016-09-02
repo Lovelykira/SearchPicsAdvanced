@@ -5,6 +5,9 @@ $(document).ready(function(){
         //}, 5000);
        });
 
+
+
+
 function update() {
           $.get('/tasks/', function(result){
                 //console.log(showObjectjQuery(result));

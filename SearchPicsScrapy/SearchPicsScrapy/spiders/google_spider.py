@@ -5,6 +5,7 @@ from multiprocessing import Process
 from scrapy.crawler import CrawlerProcess, CrawlerRunner
 from scrapy.settings import Settings
 from scrapy_redis.spiders import RedisSpider
+from fake_useragent import UserAgent
 
 import psycopg2
 
@@ -20,8 +21,9 @@ class GoogleSpider(RedisSpider):
         super(GoogleSpider, self).__init__()
         self.search_phrase = search
         self.num_items = 5
+        self.user_pk = -1
 
-    #    self.start_urls = (
+        #    self.start_urls = (
     #            'https://www.google.com.ua/search?q=' + search + '&tbm=isch',
     #        )
 
@@ -50,38 +52,48 @@ class GoogleSpider(RedisSpider):
 
     def parse(self, response):
         #inspect_response(response, self)
-        images_table = response.xpath(".//table[@class='images_table']")[0]
-        links = images_table.xpath(".//td")[:self.num_items]
-        for link in links:
-            link = link.xpath('./a')[0].extract()
-            pic_link = 0
-            pic_img = 0
-            try:
-                pic_link = link.split('href="')[1]
-                pic_link = pic_link.split('"><')[0]
-                pic_link = 'https://google.com.ua'+pic_link
-            except:
-               print "ERROR KEY!", pic_link
-            try:
-                pic_img = link.split('src="')[1].split('</a>')[0]
-                pic_img = pic_img.split('" width')[0]
-            except:
-                print "ERROR VAL!", pic_img
-            yield {str(pic_link):str(pic_img)}
+        try:
+            images_table = response.xpath(".//table[@class='images_table']")[0]
+            links = images_table.xpath(".//td")[:self.num_items]
+            for link in links:
+                link = link.xpath('./a')[0].extract()
+                pic_link = 0
+                pic_img = 0
+                try:
+                    pic_link = link.split('href="')[1]
+                    pic_link = pic_link.split('"><')[0]
+                    pic_link = 'https://google.com.ua'+pic_link
+                except:
+                   print "ERROR KEY!", pic_link
+                try:
+                    pic_img = link.split('src="')[1].split('</a>')[0]
+                    pic_img = pic_img.split('" width')[0]
+                except:
+                    print "ERROR VAL!", pic_img
+                yield {str(pic_link):str(pic_img)}
+        except:
+            print "parse error"
+            yield "Parse error"
 
 
     def start_requests(self):
         for url in self.start_urls:
+            ua = UserAgent()
             headers = {}
-            headers['User-Agent'] = str(random.randint(0,255))
-#        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'
+            headers['User-Agent'] = ua.random
             yield scrapy.Request(url, headers=headers, dont_filter=True)
+            #headers = {}
+            #headers['User-Agent'] = str(random.randint(0,255))
+#        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'
+           # yield scrapy.Request(url, headers=headers, dont_filter=True)
 
 
     def make_request_from_data(self, data):
-        data, user_pk = data.split("||")
+        if "||" in data:
+            data, user_pk = data.split("||")
+            self.user_pk = user_pk
         self.search_phrase = data
-        self.user_pk = user_pk
+
         if '://' in data:
             return self.make_requests_from_url(data)
         else:

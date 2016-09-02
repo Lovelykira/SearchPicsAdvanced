@@ -6,7 +6,7 @@
                 <a href="/" class="btn btn-primary btn-sm"> <--BACK</a><br><br>
                 {% for pic in pics %}
                     <div class="pic-container">
-                        <span class="helper"></span><a href={{pic.3}} title="{{pic.1}}"> <img src={{pic.0}} ></a>
+                        <span class="helper"></span><a href={{pic.link}} title="{{pic.site}}"> <img src={{pic.img}} ></a>
                     </div>
                 {%endfor%}
             </div>

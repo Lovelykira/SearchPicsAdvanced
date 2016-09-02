@@ -7,7 +7,7 @@ class Tasks(models.Model):
     status = models.CharField(max_length=500)
     keyword = models.CharField(max_length=500)
     date = models.DateField(auto_now=True)
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, null=True)
 
 
 class Results(models.Model):

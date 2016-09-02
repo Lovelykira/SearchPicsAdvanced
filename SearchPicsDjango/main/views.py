@@ -17,13 +17,19 @@ SPIDERS = ['google', 'yandex', 'instagram']
 
 
 def getKey(item):
-    return item[2]
+    return item.rank
 
 
 class SearchView(TemplateView):
     template_name = "search.html"
 
     def get(self, request, *args, **kwargs):
+        if request.user.is_authenticated():
+            task = Tasks.objects.filter(keyword=kwargs['phrase'], user=request.user)
+        else:
+            task = Tasks.objects.filter(keyword=kwargs['phrase'], user=None)
+        pics = Results.objects.filter(task=task)
+        pics = sorted(pics, key=getKey)
         #(kwargs['phrase'])
         #id = Tasks.objects.filter(keyword=kwargs['phrase'])
         #id = DB.select(table_name="tasks", fields=["id"], keyword__contains=kwargs['phrase'])[0][0]
@@ -36,30 +42,46 @@ class MainView(TemplateView):
     template_name = "index.html"
 
     def post(self, request, *args, **kwargs):
-        r = redis.StrictRedis()
         value = request.POST.get('search')
         if "||" in value:
             value.replace("||", "")
-        if request.user:
-            Tasks.objects.create(status="IN_PROGRESS yandex google instagram", keyword=value, user=request.user)
-            value += '||{}'.format(request.user.pk)
-        for spider in SPIDERS:
-            query = "{}:start_urls".format(spider)
-            r.lpush(query, value)
-        if request.user:
-            tasks = Tasks.objects.filter(user=request.user.pk)
+        if request.user.is_authenticated():
+            task, created = Tasks.objects.get_or_create(keyword=value, user=request.user)
+            if created:
+                task.status = "IN_PROGRESS yandex google instagram"
+                task.save()
+                value += '||{}'.format(request.user.pk)
+                for spider in SPIDERS:
+                    query = "{}:start_urls".format(spider)
+                    r = redis.StrictRedis()
+                    r.lpush(query, value)
         else:
-            tasks = []
+            task, created = Tasks.objects.get_or_create(user=None)
+            if task.keyword == value:
+                return HttpResponseRedirect('/search/' + value)
+            task.status = "IN_PROGRESS yandex google instagram"
+            task.keyword = value
+            task.save()
+            anonymous_res = Results.objects.filter(task=task).delete()
+            for spider in SPIDERS:
+                query = "{}:start_urls".format(spider)
+                r = redis.StrictRedis()
+                r.lpush(query, value)
+
+        if request.user.is_authenticated():
+            tasks = Tasks.objects.filter(user=request.user.pk)
+            return render(request, 'index.html', {'tasks': tasks})
+        else:
+            return HttpResponseRedirect('/search/'+value)
         # try:
         #     tasks = DB.select(table_name="tasks")
         # except:
         #     tasks = []
-        return render(request, 'index.html',  {'tasks':tasks})
+
 
     def get(self, request, *args, **kwargs):
-        if request.user:
+        if request.user.is_authenticated():
             tasks = Tasks.objects.filter(user=request.user.pk)
-            print(tasks)
         else:
             tasks = []
             # try:

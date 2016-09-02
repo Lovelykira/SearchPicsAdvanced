@@ -11,10 +11,13 @@ class LoginForm(forms.Form):
     def clean(self):
         #cleaned_data = super(LoginForm, self).clean()
         if not self.errors:
+            print(self.cleaned_data.get('username'))
+            print(self.cleaned_data.get('password'))
             user = authenticate(username=self.cleaned_data.get('username'), password=self.cleaned_data.get('password'))
             if user is None:
                 raise forms.ValidationError(u'Пользователя с таким именем и паролем не существует.')
             self.user = user
+
         return self.cleaned_data
 
     def get_authenticated_user(self):
@@ -30,6 +33,13 @@ class RegistrationForm(forms.ModelForm):
         fields = ('username',)
         widgets = {'username': forms.TextInput(attrs={'class': 'reqistr-username'}),
                    }
+
+    def save(self, commit=True):
+        user = super(RegistrationForm, self).save(commit=False)
+        user.set_password(self.cleaned_data.get('password1'))
+        if commit:
+            user.save()
+        return user
 
     def clean(self):
         password1 = self.cleaned_data.get('password1')

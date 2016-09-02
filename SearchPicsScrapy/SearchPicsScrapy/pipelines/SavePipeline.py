@@ -1,14 +1,18 @@
 #from .db import DB
+import asyncio
+import asyncio_redis
 import sys
 import os
-sys.path.insert(0, "/home/kira/PycharmProjects/SearchPicsAdvanced/SearchPicsDjango")
+up = lambda x: os.path.dirname(x)
+sys.path.insert(0, os.path.join(up(up(up(up(os.path.abspath(__file__))))), 'SearchPicsDjango'))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "SearchPicsDjango.settings")
-from SearchPicsDjango 
+import django
+django.setup()
+from main.models import Tasks, Results
 from scrapy_djangoitem import DjangoItem
-#from django.db.models import F
 
 class TasksItem(DjangoItem):
-    django_model = main.models.Tasks
+    django_model = Tasks
 
 class ResultsItem(DjangoItem):
     django_model = Results
@@ -32,9 +36,15 @@ class DBWriterPipeline(object):
     #         self.DB.con.close()
 
     def process_item(self, item, spider):
+        if item == "Parse error":
+            return
         self.items_processed += 1
         item = dict(item)
-        task = Tasks.objects.filter(keyword=spider.search_phrase, user_pk=spider.user_pk)
+
+        if spider.user_pk != -1:
+            task = TasksItem.django_model.objects.get(keyword=spider.search_phrase, user_id=spider.user_pk)
+        else:
+            task = TasksItem.django_model.objects.get(keyword=spider.search_phrase, user=None)
         for link, img in item.items():
             result = ResultsItem()
             result['task'] = task
@@ -46,9 +56,11 @@ class DBWriterPipeline(object):
         if self.items_processed == spider.num_items:
             self.items_processed = 0
             cur_status = task.status
-            task.update(status=cur_status.replace(" {}".format(spider.name), ""))
+            TasksItem.django_model.objects.filter(pk=task.pk).update(status=cur_status.replace(" {}".format(spider.name), ""))
             if task.status == "IN_PROGRESS":
-                task.update(status="FINISHED")
+                TasksItem.django_model.objects.filter(pk=task.pk).update(status="FINISHED")
+                run("OK")
+
 
             #Results.objects.create(task_pk=task_id, link=link, img=img, rank=self.items_processed, site=spider.name )
 
@@ -77,3 +89,23 @@ class DBWriterPipeline(object):
             # self.DB.update(table_name="tasks", set_status="GOOD", id__lt=20, returning=["keyword"])
             # self.DB.select(table_name="tasks")
         return item
+
+
+loop = asyncio.get_event_loop()
+
+
+def run(text):
+    # Create a new redis connection (this will also auto reconnect)
+    connection = yield from asyncio_redis.Connection.create('localhost', 6379)
+
+    try:
+            # Publish value
+            try:
+                yield from connection.publish('spider-channel', text)
+                print('Published.')
+            except asyncio_redis.Error as e:
+                print('Published failed', repr(e))
+
+    finally:
+        connection.close()
+
