@@ -63,7 +63,9 @@ class InstagramSpider(RedisSpider):
 
 
     def make_request_from_data(self, data):
+        data, user_pk = data.split("||")
         self.search_phrase = data
+        self.user_pk = user_pk
         if '://' in data:
             return self.make_requests_from_url(data)
         else:

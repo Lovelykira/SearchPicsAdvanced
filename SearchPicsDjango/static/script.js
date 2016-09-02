@@ -1,8 +1,8 @@
 $(document).ready(function(){
-        update();
-        setTimeout(function(){
-            update();
-        }, 5000);
+        //update();
+        //setTimeout(function(){
+        //    update();
+        //}, 5000);
        });
 
 function update() {
