@@ -1,50 +1,49 @@
 from autobahn.asyncio.websocket import WebSocketServerProtocol, \
     WebSocketServerFactory
 
-import asyncio
-import logging
-import asyncio_redis
-
-
-def run(myserverprotocol):
-    # Create a new redis connection (this will also auto reconnect)
-    connection = yield from asyncio_redis.Connection.create('localhost', 6379)
-
-    try:
-        # Subscribe to a channel.
-        subscriber = yield from connection.start_subscribe()
-        yield from subscriber.subscribe(['spider-channel'])
-
-        # Print published values in a while/true loop.
-        while True:
-            reply = yield from subscriber.next_published()
-            print('Received: ', repr(reply.value), 'on channel', reply.channel)
-            myserverprotocol.sendMessage("a")
-
-    finally:
-        connection.close()
+# Здесь храним сообщения между получением от редиса и отправкой по вебсокету
+messages = []
+connection_open = False
 
 
 class MyServerProtocol(WebSocketServerProtocol):
 
     def onConnect(self, request):
         print("Client connecting: {0}".format(request.peer))
+        global connection_open
+        connection_open = True
+
 
     def onOpen(self):
         print("WebSocket connection open.")
 
+        # при открытии вебсокета, будем раз в секунду проверять появляение сообщений и отправлять их
+        def hello():
+            global messages, connection_open
+            while len(messages):
+                if connection_open:
+                    self.sendMessage(messages[0].encode('utf8'))
+                    messages = messages[1:]
+            self.factory.loop.call_later(5, hello)
+
+        hello()
+
     def onMessage(self, payload, isBinary):
-        print("Text message received: {0}".format(payload.decode('utf8')))
+        if isBinary:
+            print("Binary message received: {0} bytes".format(len(payload)))
+        else:
+            print("Text message received: {0}".format(payload.decode('utf8')))
 
         # echo back message verbatim
         self.sendMessage(payload, isBinary)
 
     def onClose(self, wasClean, code, reason):
         print("WebSocket connection closed: {0}".format(reason))
+        global connection_open
+        connection_open = False
 
 
-if __name__ == '__main__':
-
+def main():
     try:
         import asyncio
     except ImportError:
@@ -55,11 +54,35 @@ if __name__ == '__main__':
     factory.protocol = MyServerProtocol
 
     loop = asyncio.get_event_loop()
-    #coro = loop.create_connection(myserverprotocol, '127.0.0.1', '8888')
     coro = loop.create_server(factory, '0.0.0.0', 9000)
-    server = loop.run_until_complete(coro)
-  #  coro2 = loop.create_task(run(myserverprotocol))
-  #  server2 = loop.run_until_complete(coro2)
+
+    import asyncio_redis
+
+    # Здесь мы подписываемся на обновления от редиса
+    @asyncio.coroutine
+    def example():
+        # Create connection
+        connection = yield from asyncio_redis.Connection.create(host='127.0.0.1', port=6379)
+
+        # Create subscriber.
+        subscriber = yield from connection.start_subscribe()
+
+        # Subscribe to channel.
+        yield from subscriber.subscribe(['our-channel'])
+
+        # Inside a while loop, wait for incoming events.
+        while True:
+            reply = yield from subscriber.next_published()
+            messages.append(repr(reply.value))
+            print('Received: ', repr(reply.value), 'on channel', reply.channel)
+
+        # When finished, close the connection.
+        connection.close()
+
+    # а тут мы запускаем и сервер, и слушатель редиса асинхронно
+    loop = asyncio.get_event_loop()
+    server = asyncio.async(coro)
+    baa = asyncio.async(example())
 
     try:
         loop.run_forever()
@@ -68,3 +91,7 @@ if __name__ == '__main__':
     finally:
         server.close()
         loop.close()
+
+
+if __name__ == '__main__':
+    main()

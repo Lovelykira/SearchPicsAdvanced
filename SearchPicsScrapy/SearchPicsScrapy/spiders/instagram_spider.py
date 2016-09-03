@@ -48,7 +48,7 @@ class InstagramSpider(RedisSpider):
 
     def parse(self, response):
 
-        pic_link = 'https://www.instagram.com/explore/tags/' + self.search_phrase[0]
+        pic_link = 'https://www.instagram.com/explore/tags/' + self.search_phrase[-1]
         try:
             data = response.xpath("body").xpath("p").extract()
             images_list = data[0].split('display_src": "')[1:self.num_items+1]
@@ -78,6 +78,8 @@ class InstagramSpider(RedisSpider):
         if "||" in data:
             data, user_pk = data.split("||")
             self.user_pk = user_pk
+        else:
+            self.user_pk = -1
         self.search_phrase.append(data)
         print("make",self.search_phrase)
         if " "  in data:

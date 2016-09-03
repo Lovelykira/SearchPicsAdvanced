@@ -49,15 +49,19 @@ class MainView(TemplateView):
             r = redis.StrictRedis()
             r.lpush(query, value)
 
+    def get_finished_tasks(self, request, **kwargs):
+        if request.user.is_authenticated():
+            tasks = Tasks.objects.filter(user=request.user, status="FINISHED")
+            return sorted(tasks, key=byID)
+        else:
+            return []
+
     def post(self, request, *args, **kwargs):
         value = request.POST.get('search')
         q = re.compile(r'[^a-zA-Z0-9_ ]')
         value = q.sub('', value)
         if value == "":
-            if request.user.is_authenticated():
-                tasks = Tasks.objects.filter(user=request.user.pk)
-            else:
-                tasks = []
+            tasks = self.get_finished_tasks(request)
             return render(request, 'index.html', {'tasks': tasks})
         if request.user.is_authenticated():
             task, created = Tasks.objects.get_or_create(keyword=value, user=request.user)
@@ -67,8 +71,8 @@ class MainView(TemplateView):
                 task.save()
                 value += '||{}'.format(request.user.pk)
                 self.spiders_search(value)
-            tasks = Tasks.objects.filter(user=request.user.pk)
-            tasks = sorted(tasks, key=byID)
+
+            tasks = self.get_finished_tasks(request)
             return render(request, 'index.html', {'tasks': tasks})
         else:
             task, created = Tasks.objects.get_or_create(user=None)
@@ -77,16 +81,12 @@ class MainView(TemplateView):
             task.status = "IN_PROGRESS yandex google instagram"
             task.keyword = value
             task.save()
-            anonymous_res = Results.objects.filter(task=task).delete()
+            Results.objects.filter(task=task).delete()
             self.spiders_search(value)
             return HttpResponseRedirect('/search/' + value)
 
     def get(self, request, *args, **kwargs):
-        if request.user.is_authenticated():
-            tasks = Tasks.objects.filter(user=request.user.pk)
-            tasks = sorted(tasks, key=byID)
-        else:
-            tasks = []
+        tasks = self.get_finished_tasks(request)
         return render(request, 'index.html', {'tasks':tasks})
 
 

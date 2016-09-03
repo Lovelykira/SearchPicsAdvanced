@@ -1,24 +1,26 @@
  var socket = null;
  var isopen = false;
+
  window.onload = function() {
+
     socket = new WebSocket("ws://127.0.0.1:9000");
-    socket.binaryType = "arraybuffer";
+
     socket.onopen = function() {
        console.log("Connected!");
        isopen = true;
     }
+
     socket.onmessage = function(e) {
        if (typeof e.data == "string") {
-          console.log("Text message received: " + e.data);
-       } else {
-          var arr = new Uint8Array(e.data);
-          var hex = '';
-          for (var i = 0; i < arr.length; i++) {
-             hex += ('00' + arr[i].toString(16)).substr(-2);
-          }
-          console.log("Binary message received: " + hex);
+          data = e.data.slice(1, -1);
+          var newLink = $("<a />", {
+                        name : "link",
+                        href : "/search/"+data,
+                        text : data
+                        }).appendTo('#tasks');
        }
     }
+
     socket.onclose = function(e) {
        console.log("Connection closed.");
        socket = null;

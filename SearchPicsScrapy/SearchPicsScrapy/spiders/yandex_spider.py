@@ -97,6 +97,8 @@ class YandexSpider(RedisSpider):
         if "||" in data:
             data, user_pk = data.split("||")
             self.user_pk = user_pk
+        else:
+            self.user_pk = -1
         self.search_phrase.append(data)
         print("make",self.search_phrase)
 
