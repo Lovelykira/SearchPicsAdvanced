@@ -17,7 +17,7 @@ class YandexSpider(RedisSpider):
 
     def __init__(self, search=""):
         super(YandexSpider, self).__init__()
-        self.search_phrase = search
+        self.search_phrase = []
         self.num_items = 5
         self.user_pk = -1
 
@@ -49,7 +49,6 @@ class YandexSpider(RedisSpider):
 
 
     def parse(self, response):
-        print("PARSE")
         #inspect_response(response, self)
         try:
             images_list = response.xpath(".//div[@class='page-layout__column page-layout__column_type_content']")[0]
@@ -78,7 +77,7 @@ class YandexSpider(RedisSpider):
                 yield {str(pic_link): str(pic_img)}
         except:
             print("Yandex showed capcha")
-            yield "Parse error"
+            yield {'error': True}
 
 
     def start_requests(self):
@@ -94,14 +93,15 @@ class YandexSpider(RedisSpider):
 
 
     def make_request_from_data(self, data):
+        print("DATA = ", data)
         if "||" in data:
             data, user_pk = data.split("||")
             self.user_pk = user_pk
-        self.search_phrase = data
+        self.search_phrase.append(data)
+        print("make",self.search_phrase)
 
-        if '://' in data:
-            return self.make_requests_from_url(data)
-        else:
-            return self.make_requests_from_url('https://yandex.ua/images/search?text=' + data)
+        print("SEARCH = ", self.search_phrase, data)
+
+        return self.make_requests_from_url('https://yandex.ua/images/search?text=' + data)
 
 

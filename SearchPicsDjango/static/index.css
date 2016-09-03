@@ -21,8 +21,8 @@
 
 img {
     vertical-align: middle;
-    max-height: 200px;
-    max-width: 150px;
+    max-height: 150px;
+    max-width: 200px;
 }
 
 .search, .btn{
@@ -41,7 +41,12 @@ width: 80%;
 vertical-align: middle;
 }
 
-.task{
-vertical-align: middle;
-display:inline-block;
+#.task{
+#vertical-align: middle;
+#display:inline-block;
+#}
+
+.task_name{
+text-align: middle;
 }
+

@@ -15,7 +15,7 @@ class InstagramSpider(RedisSpider):
 
     def __init__(self, search=""):
         super(InstagramSpider, self).__init__()
-        self.search_phrase = search
+        self.search_phrase = []
         self.num_items = 5
         self.user_pk = -1
 
@@ -47,7 +47,8 @@ class InstagramSpider(RedisSpider):
 
 
     def parse(self, response):
-        pic_link = 'https://www.instagram.com/explore/tags/' + self.search_phrase
+
+        pic_link = 'https://www.instagram.com/explore/tags/' + self.search_phrase[0]
         try:
             data = response.xpath("body").xpath("p").extract()
             images_list = data[0].split('display_src": "')[1:self.num_items+1]
@@ -57,7 +58,7 @@ class InstagramSpider(RedisSpider):
                 yield {pic_link: pic_img}
         except:
             print "Parse error"
-            yield "Parse error"
+            yield {'error': True}
 
 
     def start_requests(self):
@@ -73,19 +74,17 @@ class InstagramSpider(RedisSpider):
 
 
     def make_request_from_data(self, data):
+        print("DATA = ", data)
         if "||" in data:
             data, user_pk = data.split("||")
             self.user_pk = user_pk
-        self.search_phrase = data
+        self.search_phrase.append(data)
+        print("make",self.search_phrase)
         if " "  in data:
             data = data.replace(" ", "_")
-        # for char in data:
-        #     print(char)
-        #     if char not in r'[A-Za-z0-9]':
-        #         data = data.replace(char, "")
-        if '://' in data:
-            return self.make_requests_from_url(data)
-        else:
-            return self.make_requests_from_url('https://www.instagram.com/explore/tags/' + data + '/?__a=1')
+
+        print("SEARCH = ", self.search_phrase, data)
+
+        return self.make_requests_from_url('https://www.instagram.com/explore/tags/' + data + '/?__a=1')
 
 

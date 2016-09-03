@@ -19,7 +19,7 @@ class GoogleSpider(RedisSpider):
 
     def __init__(self, search=""):
         super(GoogleSpider, self).__init__()
-        self.search_phrase = search
+        self.search_phrase = []
         self.num_items = 5
         self.user_pk = -1
 
@@ -73,7 +73,7 @@ class GoogleSpider(RedisSpider):
                 yield {str(pic_link):str(pic_img)}
         except:
             print "parse error"
-            yield "Parse error"
+            yield {'error': True}
 
 
     def start_requests(self):
@@ -92,12 +92,10 @@ class GoogleSpider(RedisSpider):
         if "||" in data:
             data, user_pk = data.split("||")
             self.user_pk = user_pk
-        self.search_phrase = data
+        self.search_phrase.append(data)
+        print("make",self.search_phrase)
 
         if '://' in data:
             return self.make_requests_from_url(data)
         else:
             return self.make_requests_from_url('https://www.google.com.ua/search?q=' + data + '&tbm=isch')
-
-
-

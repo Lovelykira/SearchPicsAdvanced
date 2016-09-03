@@ -4,8 +4,12 @@ from django.http import HttpResponse,JsonResponse, HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 
+import re
 import psycopg2
 import redis
+import time
+
+from datetime import datetime, timedelta
 
 from .models import Results, Tasks
 from .forms import LoginForm, RegistrationForm
@@ -16,8 +20,11 @@ from .db import DB
 SPIDERS = ['google', 'yandex', 'instagram']
 
 
-def getKey(item):
+def byRank(item):
     return item.rank
+
+def byID(item):
+    return item.id
 
 
 class SearchView(TemplateView):
@@ -29,32 +36,40 @@ class SearchView(TemplateView):
         else:
             task = Tasks.objects.filter(keyword=kwargs['phrase'], user=None)
         pics = Results.objects.filter(task=task)
-        pics = sorted(pics, key=getKey)
-        #(kwargs['phrase'])
-        #id = Tasks.objects.filter(keyword=kwargs['phrase'])
-        #id = DB.select(table_name="tasks", fields=["id"], keyword__contains=kwargs['phrase'])[0][0]
-        #pics = DB.select(table_name="results", id_task__e=id)
-        #pics = sorted(pics, key=getKey)
+        pics = sorted(pics, key=byRank)
         return render(request, 'search.html', {'pics':pics})
 
 
 class MainView(TemplateView):
     template_name = "index.html"
 
+    def spiders_search(self, value):
+        for spider in SPIDERS:
+            query = "{}:start_urls".format(spider)
+            r = redis.StrictRedis()
+            r.lpush(query, value)
+
     def post(self, request, *args, **kwargs):
         value = request.POST.get('search')
-        if "||" in value:
-            value.replace("||", "")
+        q = re.compile(r'[^a-zA-Z0-9_ ]')
+        value = q.sub('', value)
+        if value == "":
+            if request.user.is_authenticated():
+                tasks = Tasks.objects.filter(user=request.user.pk)
+            else:
+                tasks = []
+            return render(request, 'index.html', {'tasks': tasks})
         if request.user.is_authenticated():
             task, created = Tasks.objects.get_or_create(keyword=value, user=request.user)
-            if created:
+            one_day = timedelta(days=1)
+            if created or task.date + one_day < datetime.date(datetime.now()):
                 task.status = "IN_PROGRESS yandex google instagram"
                 task.save()
                 value += '||{}'.format(request.user.pk)
-                for spider in SPIDERS:
-                    query = "{}:start_urls".format(spider)
-                    r = redis.StrictRedis()
-                    r.lpush(query, value)
+                self.spiders_search(value)
+            tasks = Tasks.objects.filter(user=request.user.pk)
+            tasks = sorted(tasks, key=byID)
+            return render(request, 'index.html', {'tasks': tasks})
         else:
             task, created = Tasks.objects.get_or_create(user=None)
             if task.keyword == value:
@@ -63,32 +78,17 @@ class MainView(TemplateView):
             task.keyword = value
             task.save()
             anonymous_res = Results.objects.filter(task=task).delete()
-            for spider in SPIDERS:
-                query = "{}:start_urls".format(spider)
-                r = redis.StrictRedis()
-                r.lpush(query, value)
-
-        if request.user.is_authenticated():
-            tasks = Tasks.objects.filter(user=request.user.pk)
-            return render(request, 'index.html', {'tasks': tasks})
-        else:
-            return HttpResponseRedirect('/search/'+value)
-        # try:
-        #     tasks = DB.select(table_name="tasks")
-        # except:
-        #     tasks = []
-
+            self.spiders_search(value)
+            return HttpResponseRedirect('/search/' + value)
 
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated():
             tasks = Tasks.objects.filter(user=request.user.pk)
+            tasks = sorted(tasks, key=byID)
         else:
             tasks = []
-            # try:
-            #     tasks = DB.select(table_name="tasks")
-            # except:
-            #     tasks=[]
         return render(request, 'index.html', {'tasks':tasks})
+
 
 
 class LoginView(FormView):

@@ -1,6 +1,6 @@
 #from .db import DB
-import asyncio
-import asyncio_redis
+#import asyncio
+#import asyncio_redis
 import sys
 import os
 up = lambda x: os.path.dirname(x)
@@ -20,7 +20,7 @@ class ResultsItem(DjangoItem):
 class DBWriterPipeline(object):
     def __init__(self):
        # self.DB = DB()
-        self.items_processed=0
+        self.items_processed={'google':0,'yandex':0,'instagram':0}
 
    # def open_spider(self, spider):
     #    self.DB.create_table("tasks", id="SERIAL PRIMARY KEY", keyword="VARCHAR(500) NOT NULL", status="VARCHAR(500) NOT NULL")
@@ -36,30 +36,39 @@ class DBWriterPipeline(object):
     #         self.DB.con.close()
 
     def process_item(self, item, spider):
-        if item == "Parse error":
-            return
-        self.items_processed += 1
-        item = dict(item)
+        print("pipeline",spider.search_phrase)
+        search_phrase = spider.search_phrase[-1]
 
+        item = dict(item)
+        print("======================================")
+        for key, val in item.items():
+            print(key, val)
+        print("======================================")
+        if 'error'in item.keys():
+            return
+        self.items_processed[spider.name] += 1
         if spider.user_pk != -1:
-            task = TasksItem.django_model.objects.get(keyword=spider.search_phrase, user_id=spider.user_pk)
+            task = TasksItem.django_model.objects.get(keyword=search_phrase, user_id=spider.user_pk)
         else:
-            task = TasksItem.django_model.objects.get(keyword=spider.search_phrase, user=None)
+            task = TasksItem.django_model.objects.get(keyword=search_phrase, user=None)
         for link, img in item.items():
             result = ResultsItem()
             result['task'] = task
             result['link'] = link
             result['img'] = img
-            result['rank'] = self.items_processed
+            result['rank'] = self.items_processed[spider.name]
             result['site'] = spider.name
-            result = result.save()
-        if self.items_processed == spider.num_items:
-            self.items_processed = 0
+            result.save()
+        if self.items_processed[spider.name] == spider.num_items:
+            spider.search_phrase = spider.search_phrase[:-1]
+            self.items_processed[spider.name] = 0
             cur_status = task.status
             TasksItem.django_model.objects.filter(pk=task.pk).update(status=cur_status.replace(" {}".format(spider.name), ""))
-            if task.status == "IN_PROGRESS":
+            if task.status == "IN_PROGRESS " + spider.name:
                 TasksItem.django_model.objects.filter(pk=task.pk).update(status="FINISHED")
-                run("OK")
+            else:
+                TasksItem.django_model.objects.filter(pk=task.pk).update(status=cur_status.replace(" {}".format(spider.name), ""))
+               # run("OK")
 
 
             #Results.objects.create(task_pk=task_id, link=link, img=img, rank=self.items_processed, site=spider.name )
@@ -91,21 +100,21 @@ class DBWriterPipeline(object):
         return item
 
 
-loop = asyncio.get_event_loop()
+#loop = asyncio.get_event_loop()
 
 
-def run(text):
-    # Create a new redis connection (this will also auto reconnect)
-    connection = yield from asyncio_redis.Connection.create('localhost', 6379)
-
-    try:
-            # Publish value
-            try:
-                yield from connection.publish('spider-channel', text)
-                print('Published.')
-            except asyncio_redis.Error as e:
-                print('Published failed', repr(e))
-
-    finally:
-        connection.close()
+# def run(text):
+#     # Create a new redis connection (this will also auto reconnect)
+#     connection = yield from asyncio_redis.Connection.create('localhost', 6379)
+#
+#     try:
+#             # Publish value
+#             try:
+#                 yield from connection.publish('spider-channel', text)
+#                 print('Published.')
+#             except asyncio_redis.Error as e:
+#                 print('Published failed', repr(e))
+#
+#     finally:
+#         connection.close()
 
