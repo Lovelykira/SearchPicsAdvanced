@@ -7,3 +7,5 @@
 2016-09-04 14:48:17,147 CRIT Can't drop privilege as nonroot user
 2016-09-04 14:48:17,467 CRIT Server 'unix_http_server' running without any HTTP authentication checking
 2016-09-04 14:48:21,008 CRIT Can't drop privilege as nonroot user
+2016-09-04 16:55:12,002 CRIT Can't drop privilege as nonroot user
+2016-09-04 16:55:12,427 CRIT Server 'unix_http_server' running without any HTTP authentication checking

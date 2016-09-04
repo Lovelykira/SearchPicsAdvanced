@@ -17,7 +17,6 @@ from .forms import LoginForm, RegistrationForm
 import logging
 logger = logging.getLogger(__name__)
 
-#DB = DB()
 SPIDERS = ['google', 'yandex', 'instagram']
 
 
@@ -55,14 +54,21 @@ class MainView(TemplateView):
             tasks = Tasks.objects.filter(user_id=user.id, status="FINISHED")
             return sorted(tasks, key=byID)
         else:
-            return []
+            tasks = Tasks.objects.filter(user=user, status="FINISHED")
+            return sorted(tasks, key=byID)
 
     def get_in_progress_tasks(self, user, **kwargs):
         if user:
             tasks = Tasks.objects.filter(user_id=user.id).exclude(status="FINISHED")
             return sorted(tasks, key=byID)
         else:
-            return []
+            tasks = Tasks.objects.filter(user=user).exclude(status="FINISHED")
+            return sorted(tasks, key=byID)
+
+    def save_task(self, task, value):
+        task.status = "IN_PROGRESS yandex google instagram"
+        task.keyword = value
+        task.save()
 
     def normalize_value(self, value):
         q = re.compile(r'[^a-zA-Z0-9_ ]')
@@ -74,23 +80,22 @@ class MainView(TemplateView):
         else:
             user = None
         value = self.normalize_value(request.POST.get('search', ""))
-        logger.info("Search phrase = {}".format(value))
+        finished_tasks = self.get_finished_tasks(user)
         if value == "":
-            finished_tasks = self.get_finished_tasks(user)
             return render(request, 'index.html', {'tasks': finished_tasks})
         if user:
             task, created = Tasks.objects.get_or_create(keyword=value, user=user)
-        else:
-            task, created = Tasks.objects.get_or_create(user=user)
-            Results.objects.filter(task=task).delete()
-        one_day = timedelta(days=1)
-        if created or task.date + one_day < datetime.date(datetime.now()):
-            task.status = "IN_PROGRESS yandex google instagram"
-            task.keyword = value
-            task.save()
-            if user:
+            one_day = timedelta(days=1)
+            if created or task.date + one_day < datetime.date(datetime.now()):
+                self.save_task(task, value)
                 value += '||{}'.format(user.pk)
+                self.spiders_search(value)
+        else:
+            task, _ = Tasks.objects.get_or_create(user=user)
+            Results.objects.filter(task=task).delete()
+            self.save_task(task, value)
             self.spiders_search(value)
+
         finished_tasks = self.get_finished_tasks(user)
         in_progress_tasks = self.get_in_progress_tasks(user)
         return render(request, 'index.html', {'tasks': finished_tasks, 'tasks2':in_progress_tasks})
