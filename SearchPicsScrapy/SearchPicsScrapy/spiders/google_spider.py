@@ -6,6 +6,7 @@ from scrapy.crawler import CrawlerProcess, CrawlerRunner
 from scrapy.settings import Settings
 from scrapy_redis.spiders import RedisSpider
 from fake_useragent import UserAgent
+import logging
 
 import psycopg2
 
@@ -64,15 +65,16 @@ class GoogleSpider(RedisSpider):
                     pic_link = pic_link.split('"><')[0]
                     pic_link = 'https://google.com.ua'+pic_link
                 except:
-                   print "ERROR KEY!", pic_link
+                    logging.log(logging.ERROR, "Spider {} couldn't parse the pic's link".format(self.name))
                 try:
                     pic_img = link.split('src="')[1].split('</a>')[0]
                     pic_img = pic_img.split('" width')[0]
                 except:
-                    print "ERROR VAL!", pic_img
+                    logging.log(logging.ERROR, "Spider {} couldn't parse the pic's img".format(self.name))
+                logging.log(logging.DEBUG, "Spider {} proceeded {}".format(self.name, {str(pic_link): str(pic_img)}))
                 yield {str(pic_link):str(pic_img)}
         except:
-            print "parse error"
+            logging.log(logging.ERROR, "Spider {} couldn't parse the page".format(self.name))
             yield {'error': True}
 
 
@@ -95,9 +97,5 @@ class GoogleSpider(RedisSpider):
         else:
             self.user_pk = -1
         self.search_phrase.append(data)
-        print("make",self.search_phrase)
 
-        if '://' in data:
-            return self.make_requests_from_url(data)
-        else:
-            return self.make_requests_from_url('https://www.google.com.ua/search?q=' + data + '&tbm=isch')
+        return self.make_requests_from_url('https://www.google.com.ua/search?q=' + data + '&tbm=isch')

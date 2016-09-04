@@ -14,7 +14,8 @@ from datetime import datetime, timedelta
 from .models import Results, Tasks
 from .forms import LoginForm, RegistrationForm
 
-from .db import DB
+import logging
+logger = logging.getLogger(__name__)
 
 #DB = DB()
 SPIDERS = ['google', 'yandex', 'instagram']
@@ -49,45 +50,59 @@ class MainView(TemplateView):
             r = redis.StrictRedis()
             r.lpush(query, value)
 
-    def get_finished_tasks(self, request, **kwargs):
-        if request.user.is_authenticated():
-            tasks = Tasks.objects.filter(user=request.user, status="FINISHED")
+    def get_finished_tasks(self, user, **kwargs):
+        if user:
+            tasks = Tasks.objects.filter(user_id=user.id, status="FINISHED")
             return sorted(tasks, key=byID)
         else:
             return []
 
-    def post(self, request, *args, **kwargs):
-        value = request.POST.get('search')
-        q = re.compile(r'[^a-zA-Z0-9_ ]')
-        value = q.sub('', value)
-        if value == "":
-            tasks = self.get_finished_tasks(request)
-            return render(request, 'index.html', {'tasks': tasks})
-        if request.user.is_authenticated():
-            task, created = Tasks.objects.get_or_create(keyword=value, user=request.user)
-            one_day = timedelta(days=1)
-            if created or task.date + one_day < datetime.date(datetime.now()):
-                task.status = "IN_PROGRESS yandex google instagram"
-                task.save()
-                value += '||{}'.format(request.user.pk)
-                self.spiders_search(value)
-
-            tasks = self.get_finished_tasks(request)
-            return render(request, 'index.html', {'tasks': tasks})
+    def get_in_progress_tasks(self, user, **kwargs):
+        if user:
+            tasks = Tasks.objects.filter(user_id=user.id).exclude(status="FINISHED")
+            return sorted(tasks, key=byID)
         else:
-            task, created = Tasks.objects.get_or_create(user=None)
-            if task.keyword == value:
-                return HttpResponseRedirect('/search/' + value)
+            return []
+
+    def normalize_value(self, value):
+        q = re.compile(r'[^a-zA-Z0-9_ ]')
+        return q.sub('', value)
+
+    def post(self, request, *args, **kwargs):
+        if request.user.is_authenticated():
+            user = request.user
+        else:
+            user = None
+        value = self.normalize_value(request.POST.get('search', ""))
+        logger.info("Search phrase = {}".format(value))
+        if value == "":
+            finished_tasks = self.get_finished_tasks(user)
+            return render(request, 'index.html', {'tasks': finished_tasks})
+        if user:
+            task, created = Tasks.objects.get_or_create(keyword=value, user=user)
+        else:
+            task, created = Tasks.objects.get_or_create(user=user)
+            Results.objects.filter(task=task).delete()
+        one_day = timedelta(days=1)
+        if created or task.date + one_day < datetime.date(datetime.now()):
             task.status = "IN_PROGRESS yandex google instagram"
             task.keyword = value
             task.save()
-            Results.objects.filter(task=task).delete()
+            if user:
+                value += '||{}'.format(user.pk)
             self.spiders_search(value)
-            return HttpResponseRedirect('/search/' + value)
+        finished_tasks = self.get_finished_tasks(user)
+        in_progress_tasks = self.get_in_progress_tasks(user)
+        return render(request, 'index.html', {'tasks': finished_tasks, 'tasks2':in_progress_tasks})
 
     def get(self, request, *args, **kwargs):
-        tasks = self.get_finished_tasks(request)
-        return render(request, 'index.html', {'tasks':tasks})
+        if request.user.is_authenticated():
+            user = request.user
+        else:
+            user = None
+        finished_tasks = self.get_finished_tasks(user)
+        in_progress_tasks = self.get_in_progress_tasks(user)
+        return render(request, 'index.html', {'tasks':finished_tasks, 'tasks2':in_progress_tasks})
 
 
 

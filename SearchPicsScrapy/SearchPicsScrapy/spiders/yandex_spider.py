@@ -1,6 +1,7 @@
 import scrapy
 import psycopg2
 import random
+import logging
 
 from fake_useragent import UserAgent
 
@@ -62,21 +63,20 @@ class YandexSpider(RedisSpider):
                 try:
                     link = link.extract()
                     pic_link = link.split('href="')[1]
-                    print(pic_link)
                     pic_link = pic_link.split('">')[0]
                     pic_link = 'https://yandex.ua'+pic_link
                 except:
-                   print("ERROR KEY!", pic_link)
+                   logging.log(logging.ERROR, "Spider {} couldn't parse the pic's link".format(self.name))
                 try:
                     img = img.extract()[0]
                     pic_img = img.split('src="')[1]
-                    print("pic_img")
                     pic_img = pic_img.split('" onerror=')[0]
                 except:
-                    print("ERROR VAL!", pic_img)
+                    logging.log(logging.ERROR, "Spider {} couldn't parse the pic's img".format(self.name))
+                logging.log(logging.DEBUG, "Spider {} proceeded {}".format(self.name, {str(pic_link): str(pic_img)}))
                 yield {str(pic_link): str(pic_img)}
         except:
-            print("Yandex showed capcha")
+            logging.log(logging.ERROR, "Spider {} couldn't parse the page".format(self.name))
             yield {'error': True}
 
 
@@ -93,16 +93,12 @@ class YandexSpider(RedisSpider):
 
 
     def make_request_from_data(self, data):
-        print("DATA = ", data)
         if "||" in data:
             data, user_pk = data.split("||")
             self.user_pk = user_pk
         else:
             self.user_pk = -1
         self.search_phrase.append(data)
-        print("make",self.search_phrase)
-
-        print("SEARCH = ", self.search_phrase, data)
 
         return self.make_requests_from_url('https://yandex.ua/images/search?text=' + data)
 

@@ -24,8 +24,9 @@ class DBWriterPipeline(object):
         self.items_processed={'google':0,'yandex':0,'instagram':0}
 
     def process_item(self, item, spider):
-        print("pipeline",spider.search_phrase)
         search_phrase = spider.search_phrase[-1]
+        logging.log(logging.DEBUG, "Pipeline processing {} of {}. Item #{}".format(search_phrase, spider.search_phrase,
+                                                                                self.items_processed))
 
         item = dict(item)
         # print("======================================")
@@ -51,10 +52,12 @@ class DBWriterPipeline(object):
         if self.items_processed[spider.name] == spider.num_items or 'error'in item.keys():
             spider.search_phrase = spider.search_phrase[:-1]
             self.items_processed[spider.name] = 0
-            cur_status = task.status
-            TasksItem.django_model.objects.filter(pk=task.pk).update(status=cur_status.replace(" {}".format(spider.name), ""))
+            cur_status = task.status.replace(" {}".format(spider.name), "")
+            TasksItem.django_model.objects.filter(pk=task.pk).update(status=cur_status)
+            logging.log(logging.DEBUG, "Pipeline processing {}. Status: {}".format(search_phrase, cur_status))
             if cur_status == "IN_PROGRESS":
                 TasksItem.django_model.objects.filter(pk=task.pk).update(status="FINISHED")
+                logging.log(logging.DEBUG, "Pipeline processing {}. FINISHED".format(search_phrase))
                 run(search_phrase)
             else:
                 TasksItem.django_model.objects.filter(pk=task.pk).update(status=cur_status.replace(" {}".format(spider.name), ""))
@@ -65,3 +68,4 @@ class DBWriterPipeline(object):
 def run(search_phrase):
     r = redis.StrictRedis(host='localhost', port=6379, db=0)
     r.publish('our-channel', search_phrase)
+    logging.log(logging.DEBUG, "Pipeline sent message({}) to webserver".format(search_phrase))

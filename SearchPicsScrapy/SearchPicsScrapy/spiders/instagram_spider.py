@@ -5,6 +5,7 @@ import json
 from scrapy.shell import inspect_response
 from fake_useragent import UserAgent
 import re
+import logging
 
 from scrapy_redis.spiders import RedisSpider
 
@@ -47,7 +48,6 @@ class InstagramSpider(RedisSpider):
 
 
     def parse(self, response):
-
         pic_link = 'https://www.instagram.com/explore/tags/' + self.search_phrase[-1]
         try:
             data = response.xpath("body").xpath("p").extract()
@@ -57,7 +57,7 @@ class InstagramSpider(RedisSpider):
                 pic_img = str(pic_img)
                 yield {pic_link: pic_img}
         except:
-            print "Parse error"
+            logging.log(logging.ERROR, "Spider {} couldn't parse the page".format(self.name))
             yield {'error': True}
 
 
@@ -74,18 +74,14 @@ class InstagramSpider(RedisSpider):
 
 
     def make_request_from_data(self, data):
-        print("DATA = ", data)
         if "||" in data:
             data, user_pk = data.split("||")
             self.user_pk = user_pk
         else:
             self.user_pk = -1
         self.search_phrase.append(data)
-        print("make",self.search_phrase)
         if " "  in data:
             data = data.replace(" ", "_")
-
-        print("SEARCH = ", self.search_phrase, data)
 
         return self.make_requests_from_url('https://www.instagram.com/explore/tags/' + data + '/?__a=1')
 

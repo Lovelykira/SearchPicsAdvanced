@@ -19,7 +19,7 @@
             {% for task in tasks %}
                  <!--<div class="row">-->
                      <!--<div class="col-md-12 task_name">-->
-                         <a href="/search/{{task.keyword}}" class="task"> {{task.keyword}}</a>,
+                         <a href="/search/{{task.keyword}}" class="task"> {{task.keyword}}</a>
                      <!--</div>-->
                     <!--<div class="col-md-8 task_progress">-->
                          <!--<div class="progress">-->
@@ -30,10 +30,22 @@
                      <!--</div>-->
 
                 <!--</div>-->
-           {% endfor %}
+            {% endfor %}
             </div>
             <div class="col-md-3"></div>
         </div>
+        <div class="row tasks2-container">
+            <div class="col-md-12">In progress searches:</div>
+        </div>
+        <div class="row">
+            <div class="col-md-3"></div>
+            <div class="col-md-6" id="tasks2">
+            {% for task in tasks2 %}
+                {{task.keyword}}
+              {% endfor %}
+            </div>
+            <div class="col-md-3"></div>
+
         </div>
     </div>
 </div>
