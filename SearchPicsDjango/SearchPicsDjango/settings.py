@@ -74,16 +74,6 @@ WSGI_APPLICATION = 'SearchPicsDjango.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.10/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'spiderdb',
-        'USER': 'kira',
-        'PASSWORD': '123',
-        'HOST': 'localhost',
-        'PORT': '',
-    }
-}
 
 
 # Password validation
@@ -177,3 +167,8 @@ if DEBUG:
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+
+try:
+	from .local_settings_test import *
+except:
+	pass

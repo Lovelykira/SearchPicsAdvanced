@@ -53,3 +53,7 @@ text-align: middle;
 .tasks2-container{
 margin: 30px 0 0 0;
 }
+
+a.new_task::after {
+content: '\00a0';
+}

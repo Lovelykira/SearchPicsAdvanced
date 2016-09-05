@@ -9,49 +9,34 @@ from fake_useragent import UserAgent
 import logging
 
 import psycopg2
+import json
 
 SEARCH = 'asd'
 START = 10
 
 
 class GoogleSpider(RedisSpider):
+    """
+    Class GoogleSpider searches the results in google.com.ua
+    """
     name = "google"
     allowed_domains = ["google.com"]
 
     def __init__(self, search=""):
         super(GoogleSpider, self).__init__()
         self.search_phrase = []
-        self.num_items = 5
+        self.num_items = 10
         self.user_pk = -1
-
-        #    self.start_urls = (
-    #            'https://www.google.com.ua/search?q=' + search + '&tbm=isch',
-    #        )
-
-        # if not self.check_search():
-        #     self.start_urls = (
-        #         'https://www.google.com.ua/search?q=' + search + '&tbm=isch',
-        #     )
-        # else:
-        #     self.start_urls =()
-
-    # def check_search(self):
-    #     try:
-    #         con = psycopg2.connect(database='spiderdb', user='kira')
-    #         cur = con.cursor()
-    #         cur.execute("SELECT * FROM search_query;")
-    #         search_query = cur.fetchall()
-    #         for item in search_query:
-    #             if item[1] == self.search_phrase:
-    #                 return True
-    #         return False
-    #
-    #     except:
-    #         print "Check search errror"
-    #         return False
 
 
     def parse(self, response):
+        """
+        The method that parses the response page.
+
+        @param response:
+        @return: if everything is ok, it returns dict with picture's image link as key and pictures image source as value.
+        if not it returns dict with 'error' as key.
+        """
         #inspect_response(response, self)
         try:
             images_table = response.xpath(".//table[@class='images_table']")[0]
@@ -78,24 +63,33 @@ class GoogleSpider(RedisSpider):
             yield {'error': True}
 
 
-    def start_requests(self):
-        for url in self.start_urls:
-            ua = UserAgent()
-            headers = {}
-            headers['User-Agent'] = ua.random
-            yield scrapy.Request(url, headers=headers, dont_filter=True)
-            #headers = {}
-            #headers['User-Agent'] = str(random.randint(0,255))
-#        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'
-           # yield scrapy.Request(url, headers=headers, dont_filter=True)
+    # def start_requests(self):
+    #     for url in self.start_urls:
+    #         ua = UserAgent()
+    #         headers = {}
+    #         headers['User-Agent'] = ua.random
+    #         yield scrapy.Request(url, headers=headers, dont_filter=True)
 
 
     def make_request_from_data(self, data):
-        if "||" in data:
-            data, user_pk = data.split("||")
-            self.user_pk = user_pk
+        """
+        The method that analyzes data from redis list.
+
+        It splits the data into search phrase and user pk and stores this variables in spider's fields.
+        @param data: str.
+        @return: calls make_requests_from_url method.
+        """
+        data_json = json.loads(data)
+        data = data_json['value']
+        if data_json['user']:
+            self.user_pk = data_json['user']
         else:
             self.user_pk = -1
+        # if "||" in data:
+        #     data, user_pk = data.split("||")
+        #     self.user_pk = user_pk
+        # else:
+        #     self.user_pk = -1
         self.search_phrase.append(data)
 
         return self.make_requests_from_url('https://www.google.com.ua/search?q=' + data + '&tbm=isch')

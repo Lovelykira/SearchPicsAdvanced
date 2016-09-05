@@ -1,46 +1,44 @@
 from autobahn.asyncio.websocket import WebSocketServerProtocol, \
     WebSocketServerFactory
 
-# Здесь храним сообщения между получением от редиса и отправкой по вебсокету
+import logging
+
 messages = []
-connection_open = False
+logging.basicConfig(filename='webserver.log',level=logging.DEBUG)
 
 
 class MyServerProtocol(WebSocketServerProtocol):
 
     def onConnect(self, request):
-        print("Client connecting: {0}".format(request.peer))
-        global connection_open
-        connection_open = True
-
+       # print("Client connecting: {0}".format(request.peer))
+        logging.info("Client connecting: {0}".format(request.peer))
+        self.con_is_open = True
 
     def onOpen(self):
-        print("WebSocket connection open.")
+        """
+        When connection is open this method checks if there are new messages from redis-server and if so sends it to
+        the client.
+        @return:
+        """
+       # print("WebSocket connection open.")
+        logging.info("WebSocket connection open.")
 
-        # при открытии вебсокета, будем раз в секунду проверять появляение сообщений и отправлять их
         def hello():
-            global messages, connection_open
+            global messages
             while len(messages):
-                if connection_open:
-                    self.sendMessage(messages[0].encode('utf8'))
-                    messages = messages[1:]
+                if not self.con_is_open:
+                    return
+                self.sendMessage(messages[0].encode('utf8'))
+                messages = messages[1:]
+                logging.info('Sent message to client')
             self.factory.loop.call_later(5, hello)
 
         hello()
 
-    def onMessage(self, payload, isBinary):
-        if isBinary:
-            print("Binary message received: {0} bytes".format(len(payload)))
-        else:
-            print("Text message received: {0}".format(payload.decode('utf8')))
-
-        # echo back message verbatim
-        self.sendMessage(payload, isBinary)
-
     def onClose(self, wasClean, code, reason):
-        print("WebSocket connection closed: {0}".format(reason))
-        global connection_open
-        connection_open = False
+       # print("WebSocket connection closed: {0}".format(reason))
+        logging.info("WebSocket connection closed: {0}".format(reason))
+        self.con_is_open = False
 
 
 def main():
@@ -58,9 +56,13 @@ def main():
 
     import asyncio_redis
 
-    # Здесь мы подписываемся на обновления от редиса
     @asyncio.coroutine
     def example():
+        """
+        The function that subscribes to redis channel and waits for messages. Once one appear the function stores it in
+        global messages.
+        @return:
+        """
         # Create connection
         connection = yield from asyncio_redis.Connection.create(host='127.0.0.1', port=6379)
 
@@ -74,15 +76,15 @@ def main():
         while True:
             reply = yield from subscriber.next_published()
             messages.append(repr(reply.value))
-            print('Received: ', repr(reply.value), 'on channel', reply.channel)
+            logging.info('Received: {} on channel {}'.format(repr(reply.value), repr(reply.channel)))
+            #print('Received: ', repr(reply.value), 'on channel', reply.channel)
 
         # When finished, close the connection.
         connection.close()
 
-    # а тут мы запускаем и сервер, и слушатель редиса асинхронно
     loop = asyncio.get_event_loop()
     server = asyncio.async(coro)
-    baa = asyncio.async(example())
+    subscriber = asyncio.async(example())
 
     try:
         loop.run_forever()

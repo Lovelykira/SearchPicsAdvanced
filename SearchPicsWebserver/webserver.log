@@ -1,0 +1,193 @@
+INFO:asyncio_redis:Connecting to redis
+INFO:asyncio_redis:Redis connection made
+DEBUG:root:Client connecting: tcp:127.0.0.1:53140
+DEBUG:root:WebSocket connection open.
+DEBUG:root:WebSocket connection closed: None
+DEBUG:root:Client connecting: tcp:127.0.0.1:53152
+DEBUG:root:WebSocket connection open.
+DEBUG:root:WebSocket connection closed: None
+DEBUG:root:Client connecting: tcp:127.0.0.1:53204
+DEBUG:root:WebSocket connection open.
+DEBUG:root:WebSocket connection closed: None
+DEBUG:root:Client connecting: tcp:127.0.0.1:53210
+DEBUG:root:WebSocket connection open.
+INFO:asyncio_redis:Connecting to redis
+INFO:asyncio_redis:Redis connection made
+INFO:root:Client connecting: tcp:127.0.0.1:53222
+INFO:root:WebSocket connection open.
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:53234
+INFO:root:WebSocket connection open.
+INFO:root:Sent message to client
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:53264
+INFO:root:WebSocket connection open.
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:53270
+INFO:root:WebSocket connection open.
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:54310
+INFO:root:WebSocket connection open.
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:54320
+INFO:root:WebSocket connection open.
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:54330
+INFO:root:WebSocket connection open.
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:56200
+INFO:root:WebSocket connection open.
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:56212
+INFO:root:WebSocket connection open.
+INFO:asyncio_redis:Connecting to redis
+INFO:asyncio_redis:Redis connection made
+INFO:root:Client connecting: tcp:127.0.0.1:56224
+INFO:root:WebSocket connection open.
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:56234
+INFO:root:WebSocket connection open.
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:56246
+INFO:root:WebSocket connection open.
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:56282
+INFO:root:WebSocket connection open.
+INFO:root:Sent message to client
+INFO:asyncio_redis:Connecting to redis
+INFO:asyncio_redis:Redis connection made
+INFO:root:Client connecting: tcp:127.0.0.1:56312
+INFO:root:WebSocket connection open.
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:56324
+INFO:root:WebSocket connection open.
+INFO:root:Received: 'coca cole' on channel 'our-channel'
+INFO:root:Sent message to client
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:56388
+INFO:root:WebSocket connection open.
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:56394
+INFO:root:WebSocket connection open.
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:56416
+INFO:root:WebSocket connection open.
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:56434
+INFO:root:WebSocket connection open.
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:56444
+INFO:root:WebSocket connection open.
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:56456
+INFO:root:WebSocket connection open.
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:56468
+INFO:root:WebSocket connection open.
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:56486
+INFO:root:WebSocket connection open.
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:56492
+INFO:root:WebSocket connection open.
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:56498
+INFO:root:WebSocket connection open.
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:56508
+INFO:root:WebSocket connection open.
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:56522
+INFO:root:WebSocket connection open.
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:56544
+INFO:root:WebSocket connection open.
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:56558
+INFO:root:WebSocket connection open.
+INFO:root:Received: 'i' on channel 'our-channel'
+INFO:root:Received: 'love' on channel 'our-channel'
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:56576
+INFO:root:WebSocket connection open.
+INFO:root:Sent message to client
+INFO:root:Sent message to client
+INFO:root:Received: 'you' on channel 'our-channel'
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:56590
+INFO:root:WebSocket connection open.
+INFO:root:Sent message to client
+INFO:root:Received: 'hello' on channel 'our-channel'
+INFO:root:Sent message to client
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:56602
+INFO:root:WebSocket connection open.
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:56642
+INFO:root:WebSocket connection open.
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:56648
+INFO:root:WebSocket connection open.
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:57380
+INFO:root:WebSocket connection open.
+INFO:root:Client connecting: tcp:127.0.0.1:57418
+INFO:root:WebSocket connection open.
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:57426
+INFO:root:WebSocket connection open.
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:57440
+INFO:root:WebSocket connection open.
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:57452
+INFO:root:WebSocket connection open.
+INFO:root:Received: 'world' on channel 'our-channel'
+INFO:root:Sent message to client
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:57486
+INFO:root:WebSocket connection open.
+INFO:root:Received: 'sleep' on channel 'our-channel'
+INFO:root:Sent message to client
+INFO:root:WebSocket connection closed: None
+INFO:root:Client connecting: tcp:127.0.0.1:57508
+INFO:root:WebSocket connection open.
+INFO:root:Received: 'speed' on channel 'our-channel'
+INFO:root:Sent message to client
+INFO:root:WebSocket connection closed: connection was closed uncleanly (peer dropped the TCP connection without previous WebSocket closing handshake)
+INFO:root:Received: 'kitten' on channel 'our-channel'
+INFO:root:Sent message to client
+INFO:root:Received: 'kitten' on channel 'our-channel'
+INFO:root:Sent message to client
+INFO:root:Received: 'kitten' on channel 'our-channel'
+INFO:root:Sent message to client
+INFO:root:Received: 'kitten' on channel 'our-channel'
+INFO:root:Sent message to client
+INFO:root:Received: 'kitten' on channel 'our-channel'
+INFO:root:Sent message to client
+INFO:root:Received: 'kitten' on channel 'our-channel'
+INFO:root:Sent message to client
+INFO:root:Received: 'kitten' on channel 'our-channel'
+INFO:root:Received: 'kitten' on channel 'our-channel'
+INFO:root:Sent message to client
+INFO:root:Sent message to client
+INFO:root:Received: 'kitten' on channel 'our-channel'
+INFO:root:Received: 'kitten' on channel 'our-channel'
+INFO:root:Sent message to client
+INFO:root:Sent message to client
+INFO:root:Received: 'kitten' on channel 'our-channel'
+INFO:root:Sent message to client
+INFO:root:Received: 'kitten' on channel 'our-channel'
+INFO:root:Sent message to client
+INFO:root:Received: 'kitten' on channel 'our-channel'
+INFO:root:Sent message to client
+INFO:root:Received: 'kitten' on channel 'our-channel'
+INFO:root:Sent message to client
+INFO:root:Received: 'kitten' on channel 'our-channel'
+INFO:root:Sent message to client
+INFO:root:Received: 'kitten' on channel 'our-channel'
+INFO:root:Sent message to client
+INFO:root:Received: 'kitten' on channel 'our-channel'
+INFO:root:Sent message to client
+INFO:root:Received: 'kitten' on channel 'our-channel'
+INFO:root:Sent message to client

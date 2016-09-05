@@ -16,11 +16,10 @@
           var newLink = $("<a />", {
                         name : "link",
                         href : "/search/"+data,
-                        text : data
+                        text : data,
+                        class : "new_task"
                         }).appendTo('#tasks');
-          tasks2 = document.getElementById("tasks2");
-          tasks2_new = tasks2.replace(data, "");
-          tasks2.InnerHtml = tasks2_new;
+
 
        }
     }
